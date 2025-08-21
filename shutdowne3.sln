@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.9.34622.214
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "shutdowne3", "shutdowne3\shutdowne3.csproj", "{9526F05A-C530-4C01-8ED5-9ECC4A708773}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AlarmClock", "..\AlarmClock\NewAlarmClock\AlarmClock.csproj", "{801BDFA6-F323-49FC-93ED-DE7132B78667}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9526F05A-C530-4C01-8ED5-9ECC4A708773}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9526F05A-C530-4C01-8ED5-9ECC4A708773}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9526F05A-C530-4C01-8ED5-9ECC4A708773}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9526F05A-C530-4C01-8ED5-9ECC4A708773}.Release|Any CPU.Build.0 = Release|Any CPU
+		{801BDFA6-F323-49FC-93ED-DE7132B78667}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{801BDFA6-F323-49FC-93ED-DE7132B78667}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{801BDFA6-F323-49FC-93ED-DE7132B78667}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{801BDFA6-F323-49FC-93ED-DE7132B78667}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {3786AE86-076C-4613-B364-841C8E2D7ECA}
+	EndGlobalSection
+EndGlobal
