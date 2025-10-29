@@ -39,11 +39,10 @@ namespace ShutdownTimer
 
         const
              string
-             VersionNumber = "1.2.1",
+             VersionNumber = "1.2.2",
              MainMessage = "\nPress Ctrl-C to {0}\nPress Ctrl-Brk to end\n\n",
              SetupMessage = "\rSet shutdown {0}: ",
              AutoKillMsg = "to shutdown automatically,\ndo nothing for twenty seconds\n",
-             ShutdownS = "s",
              PausedString = "PAUSED",
              ActiveString = "ACTIVE",
              ContinueString = "CONTINUE",
@@ -54,6 +53,7 @@ namespace ShutdownTimer
 
         static
             bool
+            instantKill = false,
             NonEssentialProcessKillOnly = false,
             SetTimeFormatDate = false;
         
@@ -67,6 +67,7 @@ namespace ShutdownTimer
 
         static readonly
             StringBuilder stringBuilder = new();
+
         #endregion
         static void KeyPressHandler(object sender, ConsoleCancelEventArgs e)
         {
@@ -92,13 +93,13 @@ namespace ShutdownTimer
             else if (e.SpecialKey == ConsoleSpecialKey.ControlBreak)
             {
                 Process.Start("shutdown.exe", "-a").WaitForExit(500);
-                System.Threading.Tasks.Task.Delay(500);
+                System.Threading.Tasks.Task.Delay(500).Wait();
                 UpdateTaskScheduler(false, DateTime.Now - TimeSpan.FromDays(1), false);
                 Environment.Exit(0);
             }
             // Cancel the default behavior of terminating the program
             e.Cancel = true;
-        }       
+        }
         static void PauseTask(Microsoft.Win32.TaskScheduler.Task task)
         {
             if (task != null)
@@ -124,7 +125,8 @@ namespace ShutdownTimer
                     if (trigger is TimeTrigger timeTrigger)
                     {
                         trigger.Enabled = true;
-                        timeTrigger.StartBoundary = timeTrigger.StartBoundary.AddSeconds(DelaySW.Elapsed.TotalSeconds);  // Example: set to 10 minutes from now.
+                        double delay = Math.Max(DelaySW.Elapsed.TotalSeconds, 1);
+                        timeTrigger.StartBoundary = timeTrigger.StartBoundary.AddSeconds(delay);
                         task.Enabled = true;
                         break;
                     }
@@ -222,11 +224,8 @@ namespace ShutdownTimer
             using RegistryKey key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System");
             if (key != null)
             {
-                object? value = key.GetValue("EnableLUA") ?? 0;
-                if (value != null)
-                {
+                object value = key.GetValue("EnableLUA") ?? 0;
                     return (int)value == 1;
-                }
             }
             return false; // Assume UAC is disabled if we can't read the registry key
         }
@@ -239,7 +238,6 @@ namespace ShutdownTimer
             }
             return false;
         }//*/
-        static bool instantKill = false;
         private static void KillNonEssentialProcesses(ref bool input)
         {
             string[]
@@ -354,7 +352,7 @@ namespace ShutdownTimer
                 }
                 instantKill = true;
                 MaybeKillNow.Start();
-                await ShutDownComplete(ShutdownS);
+                await ShutDownComplete("s");
 
                 Environment.Exit(0);
             }
@@ -486,7 +484,7 @@ namespace ShutdownTimer
 
             stringBuilder.Append(string.Format(TimerMessage, !StopwatchUntilAction.IsRunning ? PausedString : ActiveString, NonEssentialProcessKillOnly ? ProcessKillOnlyMsg : ShutdownMsg));
             stringBuilder.Append(string.Format(MainMessage, !StopwatchUntilAction.IsRunning ? ContinueString : StallString));
-            stringBuilder.Append($"\r{FormatTimeRemaining()}");
+            stringBuilder.Append(FormatTimeRemaining());
             Console.Write(stringBuilder.ToString());
         }
         static string FormatTimeRemaining()
@@ -495,28 +493,24 @@ namespace ShutdownTimer
         }
         static TimeSpan GetShutdownTimer(string? inputTime = null)
         {
-            inputTime = inputTime.Replace("½", ".5");
-            while (inputTime.Contains(".."))
-            {
-                inputTime = inputTime.Replace("..", ".");
-            }
-            inputTime = inputTime.Replace(',', '.').Trim();
-
+            inputTime = inputTime
+            .Replace(',', '.')
+            .Replace("¼", ".25")
+            .Replace("⅓", ".3333")
+            .Replace("½", ".5")
+            .Replace("⅔", ".6667")
+            .Replace("¾", ".75");
             // Sanitize the input by replacing non-letter-non-digit characters with a single whitespace
             inputTime = RegexLibrary.CountDownTimerSanitizer().Replace(inputTime, " ");
+            inputTime = inputTime.Replace(',', '.').Trim();
+            inputTime = Regex.Replace(inputTime, @"\.{2,}", ".");
 
             double totalSeconds = 0;
-
-            /*/ Split the input string by units (e.g., "20m 11m 9m 49s 2h" becomes "20m", "11m", "9m", "49s", "2h")
-            string[] parts = inputTime.Split([' ', ';', ':', '_', '-',], StringSplitOptions.RemoveEmptyEntries);//*/
-
             string[] parts = inputTime.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
             foreach (string part in parts)
             {
-                double seconds = ParseTimePart(part);
-                               
-                totalSeconds += seconds;
+                totalSeconds += ParseTimePart(part);
             }
             return TimeSpan.FromSeconds(totalSeconds);
         }
@@ -626,15 +620,12 @@ namespace ShutdownTimer
             Console.WriteLine(message);
 
             int retry = 4;
-            while (retry * DisplayConfigHelper.SetScreenToSingleScreen() > 0)
+            while (retry * DisplayConfigHelper.SetScreenToSingleScreen() != 0)
             {
                 retry--;
                 await System.Threading.Tasks.Task.Delay(1000);
             }
-            /*
-            while (WrongScreenDetectedAndFixing())
-                await System.Threading.Tasks.Task.Delay(1000);//*/
-
+           
             if (debugging)
             {
                 Process.Start("shutdown.exe", "-a")?.Dispose(); // debugging
@@ -657,18 +648,7 @@ namespace ShutdownTimer
                 uint numModeArrayElements,
                 IntPtr modeArray,
                 uint flags
-            );//*/
-
-            /*
-            [LibraryImport("user32.dll", EntryPoint = "SetDisplayConfig")]
-            private static partial int SetDisplayConfig(
-                uint numPathArrayElements,
-                nint pathArray,
-                uint numModeArrayElements,
-                nint modeArray,
-                uint flags
-            );//*/
-
+            );
             const uint SDC_TOPOLOGY_INTERNAL = 0x00000001;
             const uint SDC_APPLY = 0x00000080;
 
@@ -679,19 +659,10 @@ namespace ShutdownTimer
 
                 if (result != 0)
                 {
-                    Console.WriteLine($"SetDisplayConfig failed with error code: {result}");
+                    Console.WriteLine($"\rSetDisplayConfig failed with error code: {result}");
                 }
-
                 return result; // 0 = success, otherwise error code
             }
-        }
-
-        /* // deprecated
-        static bool WrongScreenDetectedAndFixing()
-        {
-            return DisplayConfigHelper.SetScreenToSingleScreen() != 0;
-        }*/
-
-     
+        }     
     }
 }
