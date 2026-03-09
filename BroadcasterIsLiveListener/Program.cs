@@ -400,6 +400,7 @@ namespace BroadcasterIsLiveListener
                         _configNotFound = true;
                         constructionComplete = true;
                         continueConstruction = false;
+                        Process.Start(@"https://dev.twitch.tv/console/apps");
                         continue;
                     }
                     string clientSecret = Config.ClientSecret;
@@ -2374,7 +2375,7 @@ namespace BroadcasterIsLiveListener
         public string PreferredAudioDeviceName { get; set; } = "speaker";
         public float MaxVolumeAllowed { get; set; } = .8f;
         public float MinVolumeAlert { get; set; } = .18f;
-        public string NtfyTopic { get; set; } = string.Empty;
+        public string NtfyTopic { get; set; } = "for NTFY app on your phone";
     }
            public   class     Option
     {

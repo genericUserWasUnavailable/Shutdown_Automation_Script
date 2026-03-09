@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+	  <PublishSingleFile>true</PublishSingleFile>
+	  <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+	  <SelfContained>true</SelfContained>
+	  <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+	  <TargetFramework>net8.0</TargetFramework>
+	  <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+	  <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>
